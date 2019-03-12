@@ -163,4 +163,5 @@
     (jit-lock-register #'pseudocode--region t)
     (pseudocode--region (point-min) (point-max))))
 
+(provide 'pseudocode-mode)
 ;;; pseudocode-mode.el ends here
