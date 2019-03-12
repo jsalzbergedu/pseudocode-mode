@@ -68,7 +68,7 @@
   "Matches variable names in the algoirhtm definition")
 
 (defconst pseudocode-match-variable-declaration
-  "\\([[:word:]]\\) <- .+"
+  "\\(?:[^$_a-zA-Z]\\)\\([$_a-zA-Z][$_0-9a-zA-Z]*?\\) <--? .+$"
   "Matches a variable declaration elsewhere")
 
 (setq pseudocode-mode-highlights
@@ -85,53 +85,70 @@
 ;; code for finding comments and highlighting algorithms in them
 
 (defconst pseudocode-algorithm-comment-matcher
-  "/\\(\\*[ \n\\*]*Algorithm\\(.\\|\n\\)*?\\*/\\)"
+  "/\\*[ \n\\*]*Algorithm [$_a-zA-Z][$_a-zA-Z0-9]*?(\\([$_a-zA-Z][$_a-zA-Z0-9]*,?\\)*)\\(.\\|\n\\)+?\\*/"
   "Matches comments with algorithms")
+
+(defun pseudocode-re-noerr (regexp &optional bound count)
+  (re-search-forward regexp bound t count))
 
 (defun pseudocode-overlay-one-comment ()
   (with-silent-modifications
-    (when (re-search-forward pseudocode-algorithm-comment-matcher nil t)
-      (let ((beg (match-beginning 0))
-            (end (match-end 0)))
-        (goto-char beg)
-        (while (re-search-forward pseudocode-keywords end t)
-          (let ((o (make-overlay (match-beginning 0) (match-end 0))))
-            (overlay-put o 'pseudocode t)
-            (overlay-put o 'face 'font-lock-keyword-face)))
-        (goto-char beg)
-        (when (re-search-forward pseudocode-match-algorithm-name end t)
-          (let ((o (make-overlay (match-beginning 2) (match-end 2))))
-            (overlay-put o 'pseudocode t)
-            (overlay-put o 'face font-lock-function-name-face)))
-        (goto-char beg)
-        (re-search-forward "Algorithm [^(]+?(" end t)
-        (let ((keep-going t))
-          (while keep-going
-            (let* ((param-list-beg (point))
-                   (param-list-end param-list-beg))
-              (while (not (or (= (char-after) ?,) (= (char-after) ?\))))
+    (let ((case-fold-search nil))
+      (when (pseudocode-re-noerr pseudocode-algorithm-comment-matcher nil)
+        (let ((beg (match-beginning 0))
+              (end (match-end 0))
+              (varlist nil))
+          (goto-char beg)
+          (while (pseudocode-re-noerr pseudocode-keywords end)
+            (let ((o (make-overlay (match-beginning 0) (match-end 0))))
+              (overlay-put o 'pseudocode t)
+              (overlay-put o 'face 'font-lock-keyword-face)))
+          (goto-char beg)
+          (when (pseudocode-re-noerr pseudocode-match-algorithm-name end)
+            (let ((o (make-overlay (match-beginning 2) (match-end 2))))
+              (overlay-put o 'pseudocode t)
+              (overlay-put o 'face font-lock-function-name-face)))
+          (goto-char beg)
+          (pseudocode-re-noerr "Algorithm [^(]+?(" end)
+          (let ((keep-going t))
+            (while keep-going
+              (let* ((param-list-beg (point))
+                     (param-list-end param-list-beg))
+                (while (not (or (= (char-after) ?,) (= (char-after) ?\))))
+                  (forward-char)
+                  (cl-incf param-list-end))
+                (when (or (= (char-after) ?\)))
+                  (setq keep-going nil))
                 (forward-char)
-                (cl-incf param-list-end))
-              (when (= (char-after) ?\))
-                (setq keep-going nil))
-              (forward-char)
-              (when (not (equal param-list-beg param-list-end))
-                (let ((o (make-overlay param-list-beg param-list-end)))
+                (when (not (equal param-list-beg param-list-end))
+                  (let ((o (make-overlay param-list-beg param-list-end)))
+                    (overlay-put o 'pseudocode t)
+                    (overlay-put o 'face 'font-lock-variable-name-face))
+                  (push (buffer-substring-no-properties param-list-beg param-list-end)
+                        varlist)))))
+          (goto-char beg)
+          (while (pseudocode-re-noerr pseudocode-match-variable-declaration end)
+            (let* ((var-beg (match-beginning 1))
+                   (var-end (match-end 1))
+                   (s (buffer-substring-no-properties var-beg var-end)))
+              (when (not (member s varlist))
+                (push s varlist)
+                (let ((o (make-overlay (match-beginning 1) (match-end 1))))
                   (overlay-put o 'pseudocode t)
-                  (overlay-put o 'face 'font-lock-variable-name-face))))))
-        (goto-char beg)
-        (while (re-search-forward pseudocode-match-variable-declaration end t)
-          (let ((o (make-overlay (match-beginning 1) (match-end 1))))
-            (overlay-put o 'pseudocode t)
-            (overlay-put o 'face 'font-lock-variable-name-face))))
-      (goto-char end)
-      t)))
+                  (overlay-put o 'face 'font-lock-variable-name-face)))))
+          (goto-char end))
+        t))))
 
 (defun pseudocode--region (start end)
-  (remove-overlays start end 'pseudocode t)
-  (while (and (< (point) end)
-              (pseudocode-fontify-one-comment))
-    t))
+  ;; FIXME: This code goes over the whole buffer no matter what.
+  ;; I couldn't figure out another way to do it.
+  (setq start (point-min)
+        end (point-max))
+  (save-excursion
+    (goto-char start)
+    (while (and (< (point) end)
+                (pseudocode-overlay-one-comment))
+      t)))
 
 (define-minor-mode pseudocode-comment-mode
   "A minor mode for highlighting algorithms in c style comments"
