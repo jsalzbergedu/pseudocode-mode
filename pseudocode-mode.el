@@ -56,7 +56,7 @@
 ;; "[[:word:]]\\(?: <- [[:word:]]\\)"
 
 (defconst pseudocode-keywords
-  "Algorithm\\|Input\\|Output\\|<--\\|<-\\|if\\|then\\|NOT\\|AND\\|while\\|return"
+  "Algorithm\\|Input\\|Output\\|<--\\|<-\\| if \\| then \\| else \\|NOT\\|AND\\| while \\| repeat \\| return "
   "Keywords in psuedocode.")
 
 (defconst pseudocode-match-algorithm-name
