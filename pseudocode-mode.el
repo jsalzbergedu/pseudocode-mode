@@ -78,6 +78,7 @@
         (,pseudocode-match-algorithm-variable-declaration 4 font-lock-variable-name-face)
         (,pseudocode-match-variable-declaration 1 font-lock-variable-name-face)))
 
+;;;###autoload
 (define-derived-mode pseudocode-mode prog-mode "psuedocode"
   "A mode for editing and viewing psuedocode."
   (setq font-lock-defaults '(pseudocode-mode-highlights)))
@@ -150,6 +151,7 @@
                 (pseudocode-overlay-one-comment))
       t)))
 
+;;;###autoload
 (define-minor-mode pseudocode-comment-mode
   "A minor mode for highlighting algorithms in c style comments"
   nil
