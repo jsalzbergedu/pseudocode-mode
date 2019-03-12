@@ -114,7 +114,7 @@
 ;; code for finding comments and highlighting algorithms in them
 
 (defconst pseudocode-algorithm-comment-matcher
-  "/\\*[ \n\\*]*Algorithm [$_a-zA-Z][$_a-zA-Z0-9]*?(\\([$_a-zA-Z][$_a-zA-Z0-9]*,?\\)*)\\(.\\|\n\\)+?\\*/"
+  "/\\*[ \n\\*]*Algorithm [$_a-zA-Z][$_a-zA-Z0-9]*?(\\([$_a-zA-Z][$_a-zA-Z0-9]*,? ?\\)*)\\(.\\|\n\\)+?\\*/"
   "Matches comments with algorithms")
 
 (defun pseudocode-re-noerr (regexp &optional bound count)
