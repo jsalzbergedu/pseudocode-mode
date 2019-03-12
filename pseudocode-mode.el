@@ -50,13 +50,38 @@
 
 ;;; Code:
 
-(defvar pseudocode-mode-highlights nil
-  "Highlighted keywords in pseudocode mode.")
 
-;; "[[:word:]]\\(?: <- [[:word:]]\\)"
+(defconst pseudocode-keyword-list
+  '(Algorithm
+    Input
+    Output
+    <--
+    <-
+    if
+    then
+    else
+    NOT
+    AND
+    while
+    repeat
+    return))
+
+(defconst pseudocode-before-keyword
+  "\\(\\(?:^\\|[[:space:]]\\)\\("
+  "The things that can come before a keyword")
+
+(defconst pseudocode-after-keyword
+  "\\)\\(?:$\\|[[:space:]]\\)\\)"
+  "The things that can come after a keyword")
 
 (defconst pseudocode-keywords
-  "Algorithm\\|Input\\|Output\\|<--\\|<-\\| if \\| then \\| else \\|NOT\\|AND\\| while \\| repeat \\| return "
+  (let* ((b pseudocode-before-keyword)
+         (a pseudocode-after-keyword)
+         (rest (cdr pseudocode-keyword-list))
+         (first (car pseudocode-keyword-list))
+         (first (format "%s%s%s" b first a)))
+    (concat first (cl-loop for item in rest
+                           concat (format "\\|%s%s%s" b item a))))
   "Keywords in psuedocode.")
 
 (defconst pseudocode-match-algorithm-name
@@ -71,8 +96,11 @@
   "\\(?:[^$_a-zA-Z]\\)\\([$_a-zA-Z][$_0-9a-zA-Z]*?\\) <--? .+$"
   "Matches a variable declaration elsewhere")
 
+(defvar pseudocode-mode-highlights nil
+  "Highlighted keywords in pseudocode mode.")
+
 (setq pseudocode-mode-highlights
-      `((,pseudocode-keywords . font-lock-keyword-face)
+      `((,pseudocode-keywords 0 font-lock-keyword-face)
         (,pseudocode-match-algorithm-name 2 font-lock-function-name-face)
         (,pseudocode-match-algorithm-variable-declaration 2 font-lock-variable-name-face)
         (,pseudocode-match-algorithm-variable-declaration 4 font-lock-variable-name-face)
