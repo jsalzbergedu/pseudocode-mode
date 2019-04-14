@@ -49,6 +49,7 @@
 ;; That is, C style comments beginning with Algorithm.
 
 ;;; Code:
+(require 'ht)
 
 
 (defconst pseudocode-keyword-list
@@ -126,7 +127,7 @@
       (when (pseudocode-re-noerr pseudocode-algorithm-comment-matcher nil)
         (let ((beg (match-beginning 0))
               (end (match-end 0))
-              (varlist nil))
+              (varlist (ht-create)))
           (goto-char beg)
           (while (pseudocode-re-noerr pseudocode-keywords end)
             (let ((o (make-overlay (match-beginning 0) (match-end 0))))
@@ -153,15 +154,14 @@
                   (let ((o (make-overlay param-list-beg param-list-end)))
                     (overlay-put o 'pseudocode t)
                     (overlay-put o 'face 'font-lock-variable-name-face))
-                  (push (buffer-substring-no-properties param-list-beg param-list-end)
-                        varlist)))))
+                  (ht-set! varlist (buffer-substring-no-properties param-list-beg param-list-end) t)))))
           (goto-char beg)
           (while (pseudocode-re-noerr pseudocode-match-variable-declaration end)
             (let* ((var-beg (match-beginning 1))
                    (var-end (match-end 1))
                    (s (buffer-substring-no-properties var-beg var-end)))
-              (when (not (member s varlist))
-                (push s varlist)
+              (when (not (ht-get varlist s))
+                (ht-set! varlist s t)
                 (let ((o (make-overlay (match-beginning 1) (match-end 1))))
                   (overlay-put o 'pseudocode t)
                   (overlay-put o 'face 'font-lock-variable-name-face)))))
