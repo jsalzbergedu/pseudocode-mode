@@ -5,6 +5,7 @@
 ;; Author: Jacob Salzberg <jssalzbe@ncsu.edu>
 ;; URL: https://github.com/jsalzbergedu/pseudocode-mode
 ;; Version: 0.1.0
+;; Package-Requires: ((ht "2.3"))
 ;; Keywords: pseudocode
 ;; prefix: pseudocode-
 
