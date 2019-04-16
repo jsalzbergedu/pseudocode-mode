@@ -128,6 +128,7 @@
         (let ((beg (match-beginning 0))
               (end (match-end 0))
               (varlist (ht-create)))
+          (remove-overlays beg end 'pseudocode t)
           (goto-char beg)
           (while (pseudocode-re-noerr pseudocode-keywords end)
             (let ((o (make-overlay (match-beginning 0) (match-end 0))))
