@@ -51,6 +51,7 @@
 
 ;;; Code:
 (require 'ht)
+(require 'cl-lib)
 
 
 (defconst pseudocode-keyword-list
